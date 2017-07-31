@@ -2,7 +2,7 @@ import threading, Queue
 import requests
 import os
 from pymongo import MongoClient
-from time import time
+from time import time,sleep
 import socket
 socket.setdefaulttimeout(30)
 
@@ -11,6 +11,7 @@ db = client.flickr
 urls = db.photoUrl
 t0 = time()
 count = 0
+max_retry = 10
 
 class download(threading.Thread):  
     def __init__(self,que,name):  
@@ -44,7 +45,13 @@ while True:
     photos = urls.find({"saved": {"$exists": False}}).limit(400)
     if not photos:
         print('no more photos to save!')
-        break
+        if max_retry>0:
+            max_retry-=1
+            sleep(10)
+            continue
+        else:
+            break
+    max_retry = 10
     que = Queue.Queue(maxsize = 0)
     max_thread = 10
     threads = []
@@ -57,3 +64,4 @@ while True:
         threads[i].start()
     for i in range(max_thread):    
         threads[i].join()
+    sleep(2)

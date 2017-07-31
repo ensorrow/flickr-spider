@@ -1,22 +1,22 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
+
         {
             "name": "Python",
             "type": "python",
+            "pythonPath":"${config:python.pythonPath}", 
             "request": "launch",
             "stopOnEntry": true,
-            "pythonPath": "${config:python.pythonPath}",
+            "console": "none",
             "program": "${file}",
             "cwd": "${workspaceRoot}",
-            "env": {},
-            "envFile": "${workspaceRoot}/.env",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",
                 "RedirectOutput"
-            ]
+            ],
+            "env": {"name":"value"}
         },
         {
             "name": "PySpark",

@@ -1,33 +1,52 @@
+#coding=utf-8
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 db = client.flickr
-collection = db.photoInfo
+collection = db.userInfo
 urls = db.photoUrl
 
-def getPepples():# 返回长度为50未被访问过的用户队列，广度优先搜索用
-    return collection.find({'$exists': {'used': False}}).limit(50)['nsid']
+import json
 
-def savePhotoInfo(data):
+def getQueue():# 返回作为文件存储的用户队列，广度优先搜索用
+    with open('./queue.json', 'rb') as f:
+        return json.load(f)
+
+def dumpQueue(queue):# 将队列存至本地，异常时可恢复
+    with open('./queue.json', 'wt') as f:
+        json.dump(queue, f)
+
+def saveUserInfo(data):
     if data is None:
         pass
-    photo = data['photo']
-    collection.insert_one({
-        "id": photo['id'],
-        "tags": photo['tags'],
-        "owner": photo["owner"],
-        "people": photo['people']
-    })
+    try:
+        collection.insert_one(data)
+    except Exception as err:
+        print err
 
-def savePhotoUrl(photo):
-    if photo is None:
+# def savePhotoInfo(data):
+#     if data is None:
+#         pass
+#     photo = data['photo']
+#     collection.insert_one({
+#         "id": photo['id'],
+#         "tags": photo['tags'],
+#         "owner": photo["owner"],
+#         "people": photo['people']
+#     })
+
+def savePhotoUrl(photos):
+    if photos is None:
         pass
-    image_url = "https://farm{farm}.staticflickr.com/{server}/{id}_{secret}_q.jpg".format(
-        farm=photo['farm'],
-        server=photo['server'],
-        id=photo['id'],
-        secret=photo['secret']
-    )
-    urls.insert_one({
-        "id": photo['id'],
-        "url": image_url
-    })
+    for photo in photos:
+        
+        if not urls.find_one({"id": photo["id"]}):
+            image_url = "https://farm{farm}.staticflickr.com/{server}/{id}_{secret}_q.jpg".format(
+                farm=photo['farm'],
+                server=photo['server'],
+                id=photo['id'],
+                secret=photo['secret']
+            )
+            urls.insert_one({
+                "id": photo['id'],
+                "url": image_url
+            })

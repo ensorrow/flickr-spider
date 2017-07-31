@@ -21,9 +21,9 @@ def auth():
         print('you have already authenticated')
         pass
 
-def searchGroup(query): # duprecated
+def getUserGroup(userId):
     try:
-        result = flickr.groups.search(text=query)
+        result = flickr.people.getGroups(user_id=userId)['groups']['group']
     except Exception as err:
         print(err)
     else:
@@ -64,7 +64,7 @@ def getPhotoFavi(photoId): # duprecated
 
 def getFaviPhotos(userId):
     try:
-        result = flickr.faviorites.getList(user_id=userId)
+        result = flickr.favorites.getList(user_id=userId, perpage=500)['photos']['photo']
     except Exception as err:
         print(err)
     else:
@@ -80,7 +80,7 @@ def getUserInfo(userId):
 
 def getContactInfo(userId):
     try:
-        result = flickr.contacts.getList(user_id=userId)
+        result = flickr.contacts.getList(user_id=userId)['contacts']['contact']
     except Exception as err:
         print(err)
     else:
@@ -88,7 +88,7 @@ def getContactInfo(userId):
 
 def getPublicContactInfo(userId):
     try:
-        result = flickr.contacts.getPublicList(user_id=userId)
+        result = flickr.contacts.getPublicList(user_id=userId)['contacts']['contact']
     except Exception as err:
         print(err)
     else:
@@ -96,7 +96,9 @@ def getPublicContactInfo(userId):
 
 def getUserTagInfo(userId):
     try:
-        result = flickr.tags.getListUser(user_id=userId)
+        result = flickr.tags.getListUser(user_id=userId)['who']['tags']['tag']
+        if result is not None:
+            result = map(lambda item: item['_content'], result)
     except Exception as err:
         print(err)
     else:

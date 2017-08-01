@@ -34,19 +34,16 @@ def saveUserInfo(data):
 #         "people": photo['people']
 #     })
 
-def savePhotoUrl(photos):
-    if photos is None:
-        pass
-    for photo in photos:
-        
-        if not urls.find_one({"id": photo["id"]}):
-            image_url = "https://farm{farm}.staticflickr.com/{server}/{id}_{secret}_q.jpg".format(
-                farm=photo['farm'],
-                server=photo['server'],
-                id=photo['id'],
-                secret=photo['secret']
-            )
-            urls.insert_one({
-                "id": photo['id'],
-                "url": image_url
-            })
+def savePhotoUrl(photos):# 查重交给文件写入来做，减少开销
+    if not photos:
+        return
+    photos = map(lambda photo: {
+        "id": photo['id'], 
+        'image_url':"https://farm{farm}.staticflickr.com/{server}/{id}_{secret}_q.jpg".format(
+            farm=photo['farm'],
+            server=photo['server'],
+            id=photo['id'],
+            secret=photo['secret']
+        )
+    }, photos)
+    urls.insert_many(photos)

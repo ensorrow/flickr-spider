@@ -18,7 +18,7 @@ class saveUser(threading.Thread):
             userId = utils.dequeue(self.queue)
             tlock.release()
             handleUser(userId)
-            sleep(1)            
+            # sleep(1)            
         print('%s is finished...' % self.getName())
 
 def handleUser(userId):
@@ -50,7 +50,9 @@ def handleUser(userId):
     }
     model.saveUserInfo(document)
     global count
+    tlock.acquire()    
     count+=1
+    tlock.release()
     print('saving the %dth user to the database, %ds have passed...' % (count, time() - t0))
 
 if __name__ == '__main__':
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     print('get queue from the json file...')
     queue = model.getQueue()
     print('queue init successfully!')
-    max_threads = 5
+    max_threads = 10
     for attempt in range(10):
         try:
             if not utils.isEmpty(queue):

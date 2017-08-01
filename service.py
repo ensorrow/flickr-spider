@@ -1,5 +1,4 @@
 import flickrapi
-import model
 
 flickr = flickrapi.FlickrAPI('e8da46355582dfa4165641c938638de8', '9f667d8ad49e540a', cache=True, format='parsed-json')
     

@@ -53,7 +53,7 @@ while True:
             break
     max_retry = 10
     que = Queue.Queue(maxsize = 0)
-    max_thread = 10
+    max_thread = 15
     threads = []
     for photo in photos:
         que.put(photo)

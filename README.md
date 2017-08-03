@@ -24,3 +24,7 @@
 ```
 
 `queue[0]`用于存储队头index，因为考虑去重的需要队列的出队不能采用get方法。之后运行`main.py`再运行`save.py`即可，flickr访问需要科学上网。
+
+## Notice
+
+对于使用SS、XX-NET这类代理的用户，运行时由于python requests模块证书不与系统同步的原因，会出现SSL验证错误，解决办法为手动设置`REQUESTS_CA_BUNDLE`为证书地址，以windows下的XX-NET为例，设置系统变量`REQUESTS_CA_BUNDLE`指向`${PATH 2 XX_NET}\data\gae_proxy\CA.crt`，记得运行一下`echo %REQUESTS_CA_BUNDLE%`看看有没有生效。

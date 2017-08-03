@@ -21,7 +21,7 @@ class download(threading.Thread):
         print('%s is running...' % self.getName())
         while not self.que.empty():  
             item = que.get()
-            savePhotoFile(item['url'], item['id'])
+            savePhotoFile(item['image_url'], item['id'])
         print('%s finished.' % self.getName())
 
 def savePhotoFile(url, id):
@@ -47,13 +47,14 @@ while True:
         print('no more photos to save!')
         if max_retry>0:
             max_retry-=1
+            print('wait for 10s before retry...')
             sleep(10)
             continue
         else:
             break
     max_retry = 10
     que = Queue.Queue(maxsize = 0)
-    max_thread = 15
+    max_thread = 20
     threads = []
     for photo in photos:
         que.put(photo)

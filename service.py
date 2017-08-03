@@ -65,6 +65,7 @@ def getFaviPhotos(userId):
     try:
         result = flickr.favorites.getList(user_id=userId, perpage=500)['photos']['photo']
     except Exception as err:
+        print("from getFaviPhotos")
         print(err)
     else:
         return result
@@ -73,22 +74,33 @@ def getUserInfo(userId):
     try:
         result = flickr.people.getInfo(user_id=userId)
     except Exception as err:
+        print('from userinfo')
         print(err)
     else:
         return result
 
 def getContactInfo(userId):
     try:
-        result = flickr.contacts.getList(user_id=userId)['contacts']['contact']
+        result = flickr.contacts.getList(user_id=userId)['contacts']
+        if result.has_key('contact'):
+            result = result['contact']
+        else:
+            result = []
     except Exception as err:
+        print('from contactInfo')
         print(err)
     else:
         return result
 
 def getPublicContactInfo(userId):
     try:
-        result = flickr.contacts.getPublicList(user_id=userId)['contacts']['contact']
+        result = flickr.contacts.getPublicList(user_id=userId)['contacts']
+        if result.has_key('contact'):
+            result = result['contact']
+        else:
+            result = []
     except Exception as err:
+        print('from pubcontactInfo')
         print(err)
     else:
         return result
@@ -96,9 +108,10 @@ def getPublicContactInfo(userId):
 def getUserTagInfo(userId):
     try:
         result = flickr.tags.getListUser(user_id=userId)['who']['tags']['tag']
-        if result is not None:
+        if result:
             result = map(lambda item: item['_content'], result)
     except Exception as err:
+        print('from tag')
         print(err)
     else:
         return result

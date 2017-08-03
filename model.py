@@ -47,3 +47,6 @@ def savePhotoUrl(photos):# 查重交给文件写入来做，减少开销
         )
     }, photos)
     urls.insert_many(photos)
+
+def getCount():
+    return collection.count()

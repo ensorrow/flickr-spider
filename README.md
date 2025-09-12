@@ -1,4 +1,4 @@
-# Flickr爬虫
+# Flickr爬虫 - lzy 2018
 
 ## Overview
 

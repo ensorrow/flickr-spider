@@ -28,3 +28,37 @@
 ## Notice
 
 对于使用SS、XX-NET这类代理的用户，运行时由于python requests模块证书不与系统同步的原因，会出现SSL验证错误，解决办法为手动设置`REQUESTS_CA_BUNDLE`为证书地址，以windows下的XX-NET为例，设置系统变量`REQUESTS_CA_BUNDLE`指向`${PATH 2 XX_NET}\data\gae_proxy\CA.crt`，记得运行一下`echo %REQUESTS_CA_BUNDLE%`看看有没有生效。
+
+---
+
+# 贪吃蛇游戏
+
+## 概述
+
+这是一个使用Python和Pygame开发的经典贪吃蛇游戏。
+
+## 文件说明
+
+- config.py - 游戏配置参数
+- snake.py - 蛇的实体类，包含移动、生长等行为
+- food.py - 食物实体类，包含生成逻辑
+- ui.py - 用户界面渲染
+- game.py - 主游戏逻辑和游戏循环
+
+## 运行游戏
+
+确保已安装pygame:
+```
+pip install pygame
+```
+
+运行游戏:
+```
+python game.py
+```
+
+## 游戏控制
+
+- 方向键：控制蛇的移动方向
+- 空格键：暂停/继续游戏
+- R键：重新开始游戏

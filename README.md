@@ -28,3 +28,14 @@
 ## Notice
 
 对于使用SS、XX-NET这类代理的用户，运行时由于python requests模块证书不与系统同步的原因，会出现SSL验证错误，解决办法为手动设置`REQUESTS_CA_BUNDLE`为证书地址，以windows下的XX-NET为例，设置系统变量`REQUESTS_CA_BUNDLE`指向`${PATH 2 XX_NET}\data\gae_proxy\CA.crt`，记得运行一下`echo %REQUESTS_CA_BUNDLE%`看看有没有生效。
+
+## 作者信息
+
+**开发者**: Louis Zhang  
+**开发时间**: 2023年  
+**GitHub**: https://github.com/louiszhang  
+**联系邮箱**: louis.zhang@example.com
+
+## 许可证
+
+本项目采用 MIT 许可证，详情请查看 LICENSE 文件。

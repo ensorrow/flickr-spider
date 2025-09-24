@@ -31,10 +31,7 @@
 
 ## 作者信息
 
-**开发者**: Louis Zhang  
-**开发时间**: 2023年  
-**GitHub**: https://github.com/louiszhang  
-**联系邮箱**: louis.zhang@example.com
+**开发者**: xunhe.lzy
 
 ## 许可证
 

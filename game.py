@@ -23,7 +23,7 @@ class Game:
         self.game_over = False
         self.paused = False
         
-        # 生成初始食物
+        # 生成初始食物，确保不与蛇身重叠
         self.food.generate_new_food(self.snake.get_body())
     
     def handle_events(self):
@@ -92,6 +92,7 @@ class Game:
         self.score = 0
         self.game_over = False
         self.paused = False
+        # 重新生成食物，确保不与蛇身重叠
         self.food.generate_new_food(self.snake.get_body())
     
     def run(self):

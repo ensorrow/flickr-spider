@@ -34,7 +34,8 @@ class Snake:
         dir_x, dir_y = self.direction
         new_dir_x, new_dir_y = new_direction
         
-        if dir_x * new_dir_x + dir_y * new_dir_y == 0:  # 方向垂直或水平且不相反
+        # 只有当新方向与当前方向不相反时才改变方向
+        if (dir_x, dir_y) != (-new_dir_x, -new_dir_y):
             self.direction = new_direction
     
     def grow(self):

@@ -38,8 +38,18 @@ class TestSnake(unittest.TestCase):
         self.assertEqual(self.snake.direction, (0, -CELL_SIZE))
         
         # 测试不能直接反向移动
+        initial_direction = self.snake.direction
         self.snake.change_direction((0, CELL_SIZE))  # 尝试向下移动（反向）
-        self.assertEqual(self.snake.direction, (0, -CELL_SIZE))  # 应该保持原方向
+        self.assertEqual(self.snake.direction, initial_direction)  # 应该保持原方向
+        
+        # 测试可以转向垂直方向
+        self.snake.change_direction((CELL_SIZE, 0))  # 向右移动
+        self.assertEqual(self.snake.direction, (CELL_SIZE, 0))
+        
+        # 测试不能直接反向移动
+        initial_direction = self.snake.direction
+        self.snake.change_direction((-CELL_SIZE, 0))  # 尝试向左移动（反向）
+        self.assertEqual(self.snake.direction, initial_direction)  # 应该保持原方向
     
     def test_grow(self):
         """测试蛇增长"""
@@ -71,6 +81,16 @@ class TestSnake(unittest.TestCase):
             (100, 100)   # 尾部与头部重叠，模拟碰撞
         ]
         self.assertTrue(self.snake.check_collision())
+        
+        # 测试正常情况不会碰撞
+        self.snake.body = [
+            (100, 100),  # 头部
+            (80, 100),
+            (80, 120),
+            (100, 120),
+            (120, 120)   # 不重叠
+        ]
+        self.assertFalse(self.snake.check_collision())
 
 class TestFood(unittest.TestCase):
     
@@ -91,6 +111,12 @@ class TestFood(unittest.TestCase):
         
         # 新位置不应该与蛇身重叠
         self.assertNotIn(new_position, snake_body)
+        
+        # 验证食物位置在游戏区域内
+        self.assertTrue(0 <= new_position[0] < WINDOW_WIDTH)
+        self.assertTrue(0 <= new_position[1] < WINDOW_HEIGHT)
+        self.assertEqual(new_position[0] % CELL_SIZE, 0)
+        self.assertEqual(new_position[1] % CELL_SIZE, 0)
 
 if __name__ == '__main__':
     unittest.main()

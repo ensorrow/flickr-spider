@@ -31,10 +31,11 @@
 
 ## 作者信息
 
-**开发者**: Louis Zhang  
-**开发时间**: 2023年  
-**GitHub**: https://github.com/louiszhang  
-**联系邮箱**: louis.zhang@example.com
+**项目作者**: [您的姓名]  
+**开发时间**: 2025年  
+**项目描述**: Flickr 图片爬虫工具，支持多线程爬取用户信息和图片下载  
+**联系方式**: [您的邮箱]  
+**GitHub**: [您的GitHub地址]
 
 ## 许可证
 

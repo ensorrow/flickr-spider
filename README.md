@@ -1,5 +1,7 @@
 # Flickr爬虫
 
+**作者**: xunhe.lzy
+
 ## Overview
 
 爬虫爬取的信息说明：

@@ -34,6 +34,7 @@
 **开发者**: Louis Zhang  
 **作者**: xunhe.lzy  
 **开发时间**: 2023年  
+**更新日期**: 2025年9月25日  
 **GitHub**: https://github.com/louiszhang  
 **联系邮箱**: louis.zhang@example.com
 

@@ -15,6 +15,16 @@
 - save.py 将表中的图片url多线程下载到本地存储
 - *queue.json 用于队列初始化及爬虫中断时队列的本地存储
 
+<!-- 
+代码结构说明：
+- main.py: 主程序入口，负责协调整个爬虫流程
+- model.py: 数据模型和数据库交互逻辑
+- service.py: 与Flickr API通信的网络服务层
+- utils.py: 通用工具函数集合
+- save.py: 图片下载和保存模块
+- queue.json: 队列状态持久化文件
+-->
+
 ## Usage
 
 启动mongodb，初始化queue.json如下：
@@ -25,6 +35,26 @@
 
 `queue[0]`用于存储队头index，因为考虑去重的需要队列的出队不能采用get方法。之后运行`main.py`再运行`save.py`即可，flickr访问需要科学上网。
 
+<!-- 
+运行步骤：
+1. 启动MongoDB服务
+2. 配置queue.json初始队列数据
+3. 执行main.py开始爬取用户信息和图片URL
+4. 执行save.py下载图片到本地
+注意事项：
+- 需要科学上网环境
+- MongoDB需正确配置连接参数
+- queue.json格式必须正确，第一个元素为队列索引
+-->
+
 ## Notice
 
 对于使用SS、XX-NET这类代理的用户，运行时由于python requests模块证书不与系统同步的原因，会出现SSL验证错误，解决办法为手动设置`REQUESTS_CA_BUNDLE`为证书地址，以windows下的XX-NET为例，设置系统变量`REQUESTS_CA_BUNDLE`指向`${PATH 2 XX_NET}\data\gae_proxy\CA.crt`，记得运行一下`echo %REQUESTS_CA_BUNDLE%`看看有没有生效。
+
+<!-- 
+代理配置说明：
+- SSL证书问题常见于使用代理软件时
+- 需要手动指定证书路径给requests模块
+- Windows环境下XX-NET证书路径示例已给出
+- 设置后可通过命令行验证环境变量是否生效
+-->

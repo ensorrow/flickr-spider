@@ -47,14 +47,3 @@
 - queue.json格式必须正确，第一个元素为队列索引
 -->
 
-## Notice
-
-对于使用SS、XX-NET这类代理的用户，运行时由于python requests模块证书不与系统同步的原因，会出现SSL验证错误，解决办法为手动设置`REQUESTS_CA_BUNDLE`为证书地址，以windows下的XX-NET为例，设置系统变量`REQUESTS_CA_BUNDLE`指向`${PATH 2 XX_NET}\data\gae_proxy\CA.crt`，记得运行一下`echo %REQUESTS_CA_BUNDLE%`看看有没有生效。
-
-<!-- 
-代理配置说明：
-- SSL证书问题常见于使用代理软件时
-- 需要手动指定证书路径给requests模块
-- Windows环境下XX-NET证书路径示例已给出
-- 设置后可通过命令行验证环境变量是否生效
--->

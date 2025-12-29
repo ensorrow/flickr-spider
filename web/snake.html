@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>贪吃蛇游戏</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #0d0d0d;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #gameCanvas {
+      border: 2px solid #3282b8;
+      box-shadow: 0 0 20px rgba(50, 130, 184, 0.5);
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 650px) {
+      body {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const CELL_SIZE = 20;
+    const GRID_WIDTH = 30;
+    const GRID_HEIGHT = 20;
+    const CANVAS_WIDTH = GRID_WIDTH * CELL_SIZE;
+    const CANVAS_HEIGHT = GRID_HEIGHT * CELL_SIZE;
+
+    const DIRECTIONS = {
+      UP: { dx: 0, dy: -1 },
+      DOWN: { dx: 0, dy: 1 },
+      LEFT: { dx: -1, dy: 0 },
+      RIGHT: { dx: 1, dy: 0 }
+    };
+
+    const GAME_STATES = {
+      READY: 'READY',
+      PLAYING: 'PLAYING',
+      GAME_OVER: 'GAME_OVER'
+    };
+
+    const Snake = {
+      body: [],
+      direction: null,
+      nextDirection: null,
+
+      init() {
+        this.body = [
+          { x: 10, y: 10 },
+          { x: 9, y: 10 },
+          { x: 8, y: 10 }
+        ];
+        this.direction = DIRECTIONS.RIGHT;
+        this.nextDirection = DIRECTIONS.RIGHT;
+      },
+
+      move() {
+        this.direction = this.nextDirection;
+        const head = this.body[0];
+        const newHead = {
+          x: head.x + this.direction.dx,
+          y: head.y + this.direction.dy
+        };
+        this.body.unshift(newHead);
+      },
+
+      grow() {
+      },
+
+      removeTail() {
+        this.body.pop();
+      },
+
+      checkWallCollision() {
+        const head = this.body[0];
+        return head.x < 0 || head.x >= GRID_WIDTH || head.y < 0 || head.y >= GRID_HEIGHT;
+      },
+
+      checkSelfCollision() {
+        const head = this.body[0];
+        for (let i = 1; i < this.body.length; i++) {
+          if (head.x === this.body[i].x && head.y === this.body[i].y) {
+            return true;
+          }
+        }
+        return false;
+      },
+
+      changeDirection(newDirection) {
+        const isOpposite = (
+          (this.direction === DIRECTIONS.UP && newDirection === DIRECTIONS.DOWN) ||
+          (this.direction === DIRECTIONS.DOWN && newDirection === DIRECTIONS.UP) ||
+          (this.direction === DIRECTIONS.LEFT && newDirection === DIRECTIONS.RIGHT) ||
+          (this.direction === DIRECTIONS.RIGHT && newDirection === DIRECTIONS.LEFT)
+        );
+
+        if (!isOpposite) {
+          this.nextDirection = newDirection;
+        }
+      }
+    };
+
+    const Food = {
+      position: null,
+
+      generate(snake) {
+        let attempts = 0;
+        const maxAttempts = 1000;
+
+        while (attempts < maxAttempts) {
+          const x = Math.floor(Math.random() * GRID_WIDTH);
+          const y = Math.floor(Math.random() * GRID_HEIGHT);
+
+          let overlap = false;
+          for (let segment of snake.body) {
+            if (segment.x === x && segment.y === y) {
+              overlap = true;
+              break;
+            }
+          }
+
+          if (!overlap) {
+            this.position = { x, y };
+            return;
+          }
+
+          attempts++;
+        }
+
+        this.position = { x: 0, y: 0 };
+      }
+    };
+
+    const Renderer = {
+      canvas: null,
+      ctx: null,
+
+      init(canvasElement) {
+        this.canvas = canvasElement;
+        this.ctx = this.canvas.getContext('2d');
+      },
+
+      clear() {
+        this.ctx.fillStyle = '#1a1a2e';
+        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      },
+
+      drawSnake(snake) {
+        for (let i = 0; i < snake.body.length; i++) {
+          const segment = snake.body[i];
+          const isHead = i === 0;
+          
+          this.ctx.fillStyle = isHead ? '#0f4c75' : '#3282b8';
+          
+          const x = segment.x * CELL_SIZE + 1;
+          const y = segment.y * CELL_SIZE + 1;
+          const size = CELL_SIZE - 2;
+          
+          this.ctx.beginPath();
+          this.ctx.roundRect(x, y, size, size, 4);
+          this.ctx.fill();
+        }
+      },
+
+      drawFood(food) {
+        if (!food.position) return;
+
+        this.ctx.fillStyle = '#ff6b6b';
+        const x = food.position.x * CELL_SIZE + CELL_SIZE / 2;
+        const y = food.position.y * CELL_SIZE + CELL_SIZE / 2;
+        const radius = CELL_SIZE / 2 - 2;
+
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      },
+
+      drawScore(score) {
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.font = 'bold 20px Arial';
+        this.ctx.fillText(`分数: ${score}`, 10, 30);
+      },
+
+      drawStartScreen() {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('贪吃蛇', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 60);
+
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText('使用方向键或 WASD 控制', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+        this.ctx.fillText('按空格键开始游戏', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+
+        this.ctx.textAlign = 'left';
+      },
+
+      drawGameOverScreen(score, bestScore) {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        this.ctx.fillStyle = '#ff6b6b';
+        this.ctx.font = 'bold 48px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('游戏结束', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 60);
+
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillText(`最终分数: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+        this.ctx.fillText(`最高分: ${bestScore}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 40);
+        this.ctx.fillText('按 Enter 重新开始', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 80);
+
+        this.ctx.textAlign = 'left';
+      }
+    };
+
+    const InputHandler = {
+      setupListeners(game) {
+        document.addEventListener('keydown', (event) => {
+          switch (event.key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'W':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.PLAYING) {
+                Snake.changeDirection(DIRECTIONS.UP);
+              }
+              break;
+            case 'ArrowDown':
+            case 's':
+            case 'S':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.PLAYING) {
+                Snake.changeDirection(DIRECTIONS.DOWN);
+              }
+              break;
+            case 'ArrowLeft':
+            case 'a':
+            case 'A':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.PLAYING) {
+                Snake.changeDirection(DIRECTIONS.LEFT);
+              }
+              break;
+            case 'ArrowRight':
+            case 'd':
+            case 'D':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.PLAYING) {
+                Snake.changeDirection(DIRECTIONS.RIGHT);
+              }
+              break;
+            case ' ':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.READY) {
+                Game.start();
+              }
+              break;
+            case 'Enter':
+              event.preventDefault();
+              if (Game.state === GAME_STATES.GAME_OVER) {
+                Game.reset();
+              }
+              break;
+          }
+        });
+      }
+    };
+
+    const Game = {
+      state: GAME_STATES.READY,
+      score: 0,
+      bestScore: 0,
+      lastUpdateTime: 0,
+      updateInterval: 120,
+      animationFrameId: null,
+
+      init() {
+        const canvas = document.getElementById('gameCanvas');
+        Renderer.init(canvas);
+        
+        this.bestScore = parseInt(localStorage.getItem('snakeBestScore')) || 0;
+        
+        Snake.init();
+        Food.generate(Snake);
+        
+        InputHandler.setupListeners(this);
+        
+        this.render();
+      },
+
+      start() {
+        this.state = GAME_STATES.PLAYING;
+        this.score = 0;
+        Snake.init();
+        Food.generate(Snake);
+        this.lastUpdateTime = performance.now();
+        this.gameLoop(performance.now());
+      },
+
+      reset() {
+        this.state = GAME_STATES.READY;
+        this.score = 0;
+        Snake.init();
+        Food.generate(Snake);
+        this.render();
+      },
+
+      gameOver() {
+        this.state = GAME_STATES.GAME_OVER;
+        
+        if (this.score > this.bestScore) {
+          this.bestScore = this.score;
+          localStorage.setItem('snakeBestScore', this.bestScore);
+        }
+        
+        if (this.animationFrameId) {
+          cancelAnimationFrame(this.animationFrameId);
+        }
+        
+        this.render();
+      },
+
+      gameLoop(timestamp) {
+        const deltaTime = timestamp - this.lastUpdateTime;
+
+        if (deltaTime >= this.updateInterval) {
+          this.update();
+          this.lastUpdateTime = timestamp;
+        }
+
+        this.render();
+
+        if (this.state === GAME_STATES.PLAYING) {
+          this.animationFrameId = requestAnimationFrame((t) => this.gameLoop(t));
+        }
+      },
+
+      update() {
+        Snake.move();
+
+        if (Snake.checkWallCollision() || Snake.checkSelfCollision()) {
+          this.gameOver();
+          return;
+        }
+
+        const head = Snake.body[0];
+        if (head.x === Food.position.x && head.y === Food.position.y) {
+          this.score += 10;
+          Snake.grow();
+          Food.generate(Snake);
+        } else {
+          Snake.removeTail();
+        }
+      },
+
+      render() {
+        Renderer.clear();
+        Renderer.drawFood(Food);
+        Renderer.drawSnake(Snake);
+        Renderer.drawScore(this.score);
+
+        if (this.state === GAME_STATES.READY) {
+          Renderer.drawStartScreen();
+        } else if (this.state === GAME_STATES.GAME_OVER) {
+          Renderer.drawGameOverScreen(this.score, this.bestScore);
+        }
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      Game.init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flickr 爬虫队列管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 16px;
+        }
+
+        header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+
+        .stats {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .controls {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        #inputUserId {
+            flex: 1;
+            min-width: 250px;
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        #inputUserId:focus {
+            border-color: #3b82f6;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: #f8fafc;
+        }
+
+        .filter-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .task-card:hover {
+            border-color: #cbd5e1;
+        }
+
+        .task-card.completed {
+            opacity: 0.6;
+        }
+
+        .task-card.processing {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .task-user-id {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        .task-card.completed .task-user-id {
+            text-decoration: line-through;
+        }
+
+        .task-index {
+            font-size: 12px;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .task-priority {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-medium {
+            background-color: #fed7aa;
+            color: #ea580c;
+        }
+
+        .priority-low {
+            background-color: #e2e8f0;
+            color: #64748b;
+        }
+
+        .current-marker {
+            background-color: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .task-note {
+            margin: 8px 0;
+            padding: 8px;
+            background-color: #f8fafc;
+            border-left: 3px solid #3b82f6;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-edit, .btn-delete {
+            padding: 4px 12px;
+            font-size: 13px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-select, .form-input, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-select:focus, .form-input:focus, .form-textarea:focus {
+            border-color: #3b82f6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px 8px;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .task-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Flickr 爬虫队列管理</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span>队列头位置:</span>
+                    <span class="stat-value" id="statHeadPointer">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>总任务:</span>
+                    <span class="stat-value" id="statTotal">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>已完成:</span>
+                    <span class="stat-value" id="statCompleted">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>进行中:</span>
+                    <span class="stat-value" id="statProcessing">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>待处理:</span>
+                    <span class="stat-value" id="statPending">0</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" id="btnImport">导入 queue.json</button>
+                <button class="btn btn-primary" id="btnExport">导出 queue.json</button>
+                <button class="btn btn-danger" id="btnClearAll">清空所有</button>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="inputUserId" 
+                    placeholder="输入用户 ID (例如: 128950283@N02) 或多个 ID (逗号分隔)"
+                />
+                <button class="btn btn-primary" id="btnAddTask">添加任务</button>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="pending">待处理</button>
+                <button class="filter-btn" data-filter="processing">进行中</button>
+                <button class="filter-btn" data-filter="completed">已完成</button>
+            </div>
+        </div>
+
+        <div class="task-list" id="taskList">
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <p>暂无任务,点击上方"导入 queue.json"或手动添加任务</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">编辑任务</div>
+            <div class="form-group">
+                <label class="form-label">用户 ID</label>
+                <input type="text" class="form-input" id="editUserId" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">优先级</label>
+                <select class="form-select" id="editPriority">
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">截止日期</label>
+                <input type="date" class="form-input" id="editDeadline">
+            </div>
+            <div class="form-group">
+                <label class="form-label">备注</label>
+                <textarea class="form-textarea" id="editNote" placeholder="添加备注信息..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="btnCancelEdit">取消</button>
+                <button class="btn btn-primary" id="btnSaveEdit">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+        let currentEditIndex = null;
+
+        const DataConverter = {
+            importFromQueue(jsonArray) {
+                if (!Array.isArray(jsonArray) || jsonArray.length === 0) {
+                    throw new Error('队列格式不正确');
+                }
+
+                const headPointer = jsonArray[0];
+                if (typeof headPointer !== 'number') {
+                    throw new Error('queue[0] 应为数字');
+                }
+
+                const items = [];
+                for (let i = 1; i < jsonArray.length; i++) {
+                    const userId = jsonArray[i];
+                    const index = i;
+                    
+                    let status = 'pending';
+                    if (index < headPointer) {
+                        status = 'completed';
+                    } else if (index === headPointer) {
+                        status = 'processing';
+                    }
+
+                    items.push({
+                        userId: userId,
+                        index: index,
+                        status: status,
+                        priority: 'medium',
+                        deadline: null,
+                        note: '',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+
+                return {
+                    headPointer: headPointer,
+                    items: items
+                };
+            },
+
+            exportToQueue(managedData) {
+                const sortedItems = [...managedData.items].sort((a, b) => a.index - b.index);
+                const result = [managedData.headPointer];
+                
+                for (const item of sortedItems) {
+                    result.push(item.userId);
+                }
+                
+                return result;
+            }
+        };
+
+        const StorageManager = {
+            save(data) {
+                try {
+                    localStorage.setItem('flickr_queue_data', JSON.stringify(data));
+                } catch (e) {
+                    alert('存储空间不足,请清理浏览器数据或导出备份');
+                    throw e;
+                }
+            },
+
+            load() {
+                try {
+                    const json = localStorage.getItem('flickr_queue_data');
+                    return json ? JSON.parse(json) : { headPointer: 1, items: [] };
+                } catch (e) {
+                    return { headPointer: 1, items: [] };
+                }
+            },
+
+            clear() {
+                localStorage.removeItem('flickr_queue_data');
+            }
+        };
+
+        const FileHandler = {
+            uploadFile(inputElement) {
+                const file = inputElement.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const jsonArray = JSON.parse(e.target.result);
+                        const managedData = DataConverter.importFromQueue(jsonArray);
+                        StorageManager.save(managedData);
+                        UIRenderer.refresh();
+                        alert('导入成功!');
+                    } catch (err) {
+                        alert('文件格式错误: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            },
+
+            downloadFile() {
+                const data = StorageManager.load();
+                if (data.items.length === 0) {
+                    alert('没有数据可导出');
+                    return;
+                }
+
+                const queueData = DataConverter.exportToQueue(data);
+                const blob = new Blob([JSON.stringify(queueData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `queue_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        const TaskManager = {
+            isValidFlickrUserId(userId) {
+                return /^\d+@N\d{2}$/.test(userId);
+            },
+
+            addTask(userId, options = {}) {
+                const data = StorageManager.load();
+                
+                if (!this.isValidFlickrUserId(userId)) {
+                    alert('用户 ID 格式不正确,应为: 数字@N两位数字\n例如: 128950283@N02');
+                    return false;
+                }
+
+                const exists = data.items.find(item => item.userId === userId);
+                if (exists) {
+                    alert('该用户 ID 已存在于队列中');
+                    return false;
+                }
+
+                const maxIndex = data.items.length > 0 
+                    ? Math.max(...data.items.map(i => i.index))
+                    : 0;
+                
+                const newIndex = maxIndex + 1;
+                const status = newIndex < data.headPointer ? 'completed' 
+                    : (newIndex === data.headPointer ? 'processing' : 'pending');
+
+                const newItem = {
+                    userId: userId,
+                    index: newIndex,
+                    status: status,
+                    priority: options.priority || 'medium',
+                    deadline: options.deadline || null,
+                    note: options.note || '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                data.items.push(newItem);
+                StorageManager.save(data);
+                UIRenderer.refresh();
+                return true;
+            },
+
+            updateTask(index, updates) {
+                const data = StorageManager.load();
+                const item = data.items.find(i => i.index === index);
+                
+                if (!item) return;
+
+                Object.assign(item, updates, {
+                    updatedAt: new Date().toISOString()
+                });
+
+                StorageManager.save(data);
+                UIRenderer.refresh();
+            },
+
+            deleteTask(index) {
+                if (!confirm('确定删除此任务?')) return;
+
+                const data = StorageManager.load();
+                data.items = data.items.filter(i => i.index !== index);
+                StorageManager.save(data);
+                UIRenderer.refresh();
+            },
+
+            batchAddTasks(userIdsStr) {
+                const userIds = userIdsStr.split(',').map(s => s.trim()).filter(s => s);
+                const uniqueIds = [...new Set(userIds)];
+                
+                let successCount = 0;
+                for (const userId of uniqueIds) {
+                    if (this.addTask(userId)) {
+                        successCount++;
+                    }
+                }
+
+                if (successCount > 0) {
+                    alert(`成功添加 ${successCount} 个任务`);
+                }
+            },
+
+            toggleComplete(index) {
+                const data = StorageManager.load();
+                const item = data.items.find(i => i.index === index);
+                
+                if (!item) return;
+
+                const newStatus = item.status === 'completed' ? 'pending' : 'completed';
+                this.updateTask(index, { status: newStatus });
+            }
+        };
+
+        const UIRenderer = {
+            renderStats(data) {
+                document.getElementById('statHeadPointer').textContent = data.headPointer;
+                document.getElementById('statTotal').textContent = data.items.length;
+                
+                const completed = data.items.filter(i => i.status === 'completed').length;
+                const processing = data.items.filter(i => i.status === 'processing').length;
+                const pending = data.items.filter(i => i.status === 'pending').length;
+                
+                document.getElementById('statCompleted').textContent = completed;
+                document.getElementById('statProcessing').textContent = processing;
+                document.getElementById('statPending').textContent = pending;
+            },
+
+            renderTaskCard(item, headPointer) {
+                const card = document.createElement('div');
+                card.className = `task-card ${item.status}`;
+                card.dataset.index = item.index;
+
+                const priorityLabels = {
+                    high: '高',
+                    medium: '中',
+                    low: '低'
+                };
+
+                const isCurrentProcessing = item.index === headPointer;
+
+                card.innerHTML = `
+                    <div class="task-header">
+                        <input type="checkbox" class="task-checkbox" ${item.status === 'completed' ? 'checked' : ''}>
+                        <span class="task-index">#${item.index}</span>
+                        <span class="task-user-id">${item.userId}</span>
+                        <span class="task-priority priority-${item.priority}">${priorityLabels[item.priority]}</span>
+                        ${isCurrentProcessing ? '<span class="current-marker">← 当前处理</span>' : ''}
+                    </div>
+                    ${item.note ? `<div class="task-note">${item.note}</div>` : ''}
+                    <div class="task-actions">
+                        <button class="btn btn-secondary btn-edit">编辑</button>
+                        <button class="btn btn-danger btn-delete">删除</button>
+                    </div>
+                `;
+
+                return card;
+            },
+
+            renderTaskList(data, filter) {
+                const taskList = document.getElementById('taskList');
+                
+                let items = [...data.items];
+                if (filter !== 'all') {
+                    items = items.filter(i => i.status === filter);
+                }
+
+                items.sort((a, b) => a.index - b.index);
+
+                taskList.innerHTML = '';
+
+                if (items.length === 0) {
+                    taskList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <p>${filter === 'all' ? '暂无任务,点击上方"导入 queue.json"或手动添加任务' : '该筛选条件下暂无任务'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const fragment = document.createDocumentFragment();
+                items.forEach(item => {
+                    fragment.appendChild(this.renderTaskCard(item, data.headPointer));
+                });
+                taskList.appendChild(fragment);
+            },
+
+            refresh() {
+                const data = StorageManager.load();
+                this.renderStats(data);
+                this.renderTaskList(data, currentFilter);
+            }
+        };
+
+        document.getElementById('btnImport').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            FileHandler.uploadFile(e.target);
+            e.target.value = '';
+        });
+
+        document.getElementById('btnExport').addEventListener('click', () => {
+            FileHandler.downloadFile();
+        });
+
+        document.getElementById('btnClearAll').addEventListener('click', () => {
+            if (confirm('确定清空所有数据吗?此操作不可恢复!')) {
+                StorageManager.clear();
+                UIRenderer.refresh();
+            }
+        });
+
+        document.getElementById('btnAddTask').addEventListener('click', () => {
+            const input = document.getElementById('inputUserId');
+            const userId = input.value.trim();
+            
+            if (!userId) {
+                alert('请输入用户 ID');
+                return;
+            }
+
+            if (userId.includes(',')) {
+                TaskManager.batchAddTasks(userId);
+            } else {
+                if (TaskManager.addTask(userId)) {
+                    input.value = '';
+                }
+            }
+        });
+
+        document.getElementById('inputUserId').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('btnAddTask').click();
+            }
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                UIRenderer.refresh();
+            });
+        });
+
+        document.getElementById('taskList').addEventListener('click', (e) => {
+            const card = e.target.closest('.task-card');
+            if (!card) return;
+
+            const index = parseInt(card.dataset.index);
+
+            if (e.target.classList.contains('btn-delete')) {
+                TaskManager.deleteTask(index);
+            } else if (e.target.classList.contains('btn-edit')) {
+                const data = StorageManager.load();
+                const item = data.items.find(i => i.index === index);
+                if (!item) return;
+
+                currentEditIndex = index;
+                document.getElementById('editUserId').value = item.userId;
+                document.getElementById('editPriority').value = item.priority;
+                document.getElementById('editDeadline').value = item.deadline || '';
+                document.getElementById('editNote').value = item.note || '';
+                document.getElementById('editModal').classList.add('active');
+            } else if (e.target.classList.contains('task-checkbox')) {
+                TaskManager.toggleComplete(index);
+            }
+        });
+
+        document.getElementById('btnCancelEdit').addEventListener('click', () => {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditIndex = null;
+        });
+
+        document.getElementById('btnSaveEdit').addEventListener('click', () => {
+            if (currentEditIndex === null) return;
+
+            const updates = {
+                priority: document.getElementById('editPriority').value,
+                deadline: document.getElementById('editDeadline').value || null,
+                note: document.getElementById('editNote').value.trim()
+            };
+
+            TaskManager.updateTask(currentEditIndex, updates);
+            document.getElementById('editModal').classList.remove('active');
+            currentEditIndex = null;
+        });
+
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') {
+                document.getElementById('editModal').classList.remove('active');
+                currentEditIndex = null;
+            }
+        });
+
+        UIRenderer.refresh();
+    </script>
+</body>
+</html>
